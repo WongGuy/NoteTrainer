@@ -3,6 +3,7 @@
 import os
 from queue import Queue, Empty
 import tkinter as tk
+from tkinter import messagebox
 from config import *
 from audio_device import find_device_id, get_device_info
 from note_generator import get_note, get_note_queue
@@ -11,16 +12,24 @@ from custom_note_detector import GUINoteDetector
 from note_trainer_gui import NoteTrainerGUI
 from audio_handler import AudioHandler
 from stats_tracker import StatsTracker
+from device_config import DeviceConfig
 
 def main():
-    # Find device ID
-    device_id, device_text_name = find_device_id(DEVICE_NAME)
-    if device_id is None:
-        print("Device not found. Exiting...")
-        raise SystemExit("Device not found. Exiting...")
+    # Create a temporary root window for the device selection dialog
+    temp_root = tk.Tk()
+    temp_root.withdraw()  # Hide the temporary root window
+
+    # Device selection dialog
+    device_config = DeviceConfig(temp_root, title="Select Input Device")
+    temp_root.destroy()  # Destroy the temporary root window after the dialog is done
+
+    if device_config.device_id is None or device_config.total_input_channels is None:
+        messagebox.showerror("Error", "Device selection failed or was canceled. Exiting.")
+        return
+
 
     # Get device info
-    device_info = get_device_info(device_id)
+    device_info = get_device_info(device_config.device_id)
     actual_samplerate = device_info['default_samplerate']
     print(f"Actual device sample rate: {actual_samplerate} Hz")
     print(f"Assumed device sample rate: {SAMPLERATE} Hz")
@@ -28,7 +37,6 @@ def main():
     # Initialize Tkinter window
     root = tk.Tk()
     root.title("Note Trainer")
-    print("Tkinter Window Initialized")
 
     # Initialize Target Note and Note Queue
     target_note = get_note('C', SHARPS_ENABLED, FLATS_ENABLED)
@@ -51,7 +59,7 @@ def main():
         silence_threshold=SILENCE,
         min_freq=MIN_FREQUENCY,
         max_freq=MAX_FREQUENCY,
-        target_channel=TARGET_CHANNEL,
+        target_channel=device_config.target_channel,
         gui_queue=gui_queue  # Pass the queue to the note detector
     )
     note_detector.set_target_note(target_note)
@@ -64,14 +72,14 @@ def main():
 
     # Initialize and start the audio handler
     audio_handler = AudioHandler(
-        device_id=device_id,
+        device_id=device_config.device_id,
         samplerate=SAMPLERATE,
         blocksize=BLOCKSIZE,
-        channels=TOTAL_INPUT_CHANNELS,
+        channels=device_config.total_input_channels,
         callback=audio_callback
     )
     audio_handler.start()
-    print(f"Using device ID: {device_id}, Device Name: {device_text_name}")
+    print(f"Using device ID: {device_config.device_id}, Device Name: {device_info['name']}")
 
     # Function to periodically check the queue
     def check_queue():
