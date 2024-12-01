@@ -21,10 +21,10 @@ def frequency_to_note(freq):
     
     return note, octave, cents_difference
 
-def note_to_text(note):
+def note_index_to_text(note):
     return NOTE_NAMES_ALL[note]
 
-def text_to_note(note):
+def text_to_note_index(note):
     if note in NOTE_NAMES_ALL:
         note = NOTE_NAMES_ALL.index(note)
     elif note in NOTE_NAMES_SHARP:

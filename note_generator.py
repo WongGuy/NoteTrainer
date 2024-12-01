@@ -1,37 +1,49 @@
 # note_generator.py
 
 import random
-from note_utils import *
-from config import *
+from note_utils import text_to_note_index
+from config import NOTE_NAMES_SHARP_AND_FLAT
 
-def get_note(last_note, sharps_enabled, flats_enabled):
-    # Determine the index of the last note in both lists
-    last_note_index = text_to_note(last_note)
-    # Build the valid notes list based on the constraints
-    valid_notes = []
-    
-    if sharps_enabled:
-        valid_notes.extend([note for i, note in enumerate(NOTE_NAMES_SHARP) if i != last_note_index])
-    if flats_enabled:
-        valid_notes.extend([note for i, note in enumerate(NOTE_NAMES_FLAT) if i != last_note_index])
-    if not sharps_enabled and not flats_enabled:
-        # Only natural notes are allowed
-        valid_notes.extend([NOTE_NAMES_SHARP[i] for i in range(12) if '#' not in NOTE_NAMES_SHARP[i] and 'b' not in NOTE_NAMES_SHARP[i] and i != last_note_index])
-    
-    # Remove duplicates in case sharps and flats are both enabled
-    valid_notes = list(set(valid_notes))
-    
-    # Randomly select a note from the valid list
-    return random.choice(valid_notes)
+class NoteGenerator:
+    def __init__(self):
+        # Initialize all notes as enabled by default
+        self.enabled_roots = {note: True for note in NOTE_NAMES_SHARP_AND_FLAT}
 
-def get_note_queue(queue_size, last_note, sharps_enabled, flats_enabled):
-    # Generate a queue of notes based on the constraints
-    note_queue = []
-    current_last_note = last_note
-    
-    for _ in range(queue_size):
-        new_note = get_note(current_last_note, sharps_enabled, flats_enabled)
-        note_queue.append(new_note)
-        current_last_note = new_note  # Update the last note
-    
-    return note_queue
+    def get_valid_notes(self, last_note):
+        # Build the valid notes list based on the constraints
+        valid_notes = []
+
+        # Filter notes based on sharps_enabled and flats_enabled
+        for note in self.enabled_roots:
+            if not self.enabled_roots[note]:
+                continue  # Skip disabled notes
+            if note != last_note: # Skip immediate repeats
+                valid_notes.append(note)
+
+        return valid_notes
+
+    def get_note(self, last_note):
+        valid_notes = self.get_valid_notes(last_note)
+        if not valid_notes:
+            raise ValueError("No valid notes available to generate.")
+        return random.choice(valid_notes)
+
+    def get_note_queue(self, queue_size, last_note):
+        note_queue = []
+        current_last_note = last_note
+
+        for _ in range(queue_size):
+            new_note = self.get_note(current_last_note)
+            note_queue.append(new_note)
+            current_last_note = new_note  # Update the last note
+
+        return note_queue
+
+    def set_note_enabled(self, note, enabled):
+        if note in self.enabled_roots:
+            self.enabled_roots[note] = enabled
+        else:
+            raise ValueError(f"Note '{note}' is not recognized.")
+
+    def get_enabled_roots(self):
+        return [note for note, enabled in self.enabled_roots.items() if enabled]

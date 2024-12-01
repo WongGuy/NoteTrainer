@@ -5,9 +5,9 @@ from queue import Queue, Empty
 import tkinter as tk
 from tkinter import messagebox
 from config import *
-from audio_device import find_device_id, get_device_info
-from note_generator import get_note, get_note_queue
-from note_utils import text_to_note
+from audio_device import get_device_info
+from note_generator import NoteGenerator
+from note_utils import text_to_note_index
 from custom_note_detector import GUINoteDetector
 from note_trainer_gui import NoteTrainerGUI
 from audio_handler import AudioHandler
@@ -27,7 +27,6 @@ def main():
         messagebox.showerror("Error", "Device selection failed or was canceled. Exiting.")
         return
 
-
     # Get device info
     device_info = get_device_info(device_config.device_id)
     actual_samplerate = device_info['default_samplerate']
@@ -38,15 +37,18 @@ def main():
     root = tk.Tk()
     root.title("Note Trainer")
 
+    # Initialize NoteGenerator
+    note_generator = NoteGenerator()
+
     # Initialize Target Note and Note Queue
-    target_note = get_note('C', SHARPS_ENABLED, FLATS_ENABLED)
-    note_queue = get_note_queue(QUEUE_SIZE, target_note, SHARPS_ENABLED, FLATS_ENABLED)
+    target_note = note_generator.get_note('')
+    note_queue = note_generator.get_note_queue(QUEUE_SIZE, target_note)
 
     # Initialize StatsTracker
     stats_tracker = StatsTracker()
 
     # Initialize GUI
-    gui = NoteTrainerGUI(root, target_note, note_queue, stats_tracker)
+    gui = NoteTrainerGUI(root, target_note, note_queue, stats_tracker, note_generator)
 
     # For thread-safe communication, we'll use a queue
     gui_queue = Queue()
@@ -90,14 +92,14 @@ def main():
                     detected_note = message['note']
                     gui.update_detected_note(detected_note)
                     # Check if detected note matches target note
-                    if text_to_note(detected_note) == text_to_note(note_detector.target_note):
+                    if text_to_note_index(detected_note) == text_to_note_index(note_detector.target_note):
                         # Update stats tracker
                         stats_tracker.increment_correct_notes(note_detector.target_note)
                         # Move the first note in the note queue to be the new target note
                         new_target_note = note_queue.pop(0)
                         note_detector.set_target_note(new_target_note)
                         # Add a new random note to the end of the queue
-                        new_note = get_note(note_queue[-1], SHARPS_ENABLED, FLATS_ENABLED)
+                        new_note = note_generator.get_note(note_queue[-1])
                         note_queue.append(new_note)
                         # Update the queue display variables
                         gui.update_target_note_and_queue(new_target_note, note_queue)

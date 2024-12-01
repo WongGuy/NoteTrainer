@@ -3,15 +3,20 @@
 import tkinter as tk
 from tkinter import ttk, messagebox  # Imported messagebox for pop-up messages
 from config import *
+from note_generator import NoteGenerator
+from functools import partial
 
 class NoteTrainerGUI:
-    def __init__(self, root, target_note, note_queue, stats_tracker):
+    def __init__(self, root, target_note, note_queue, stats_tracker, note_generator):
+        
         self.root = root
         self.root.geometry("1080x960")
-        self.stats_tracker = stats_tracker  # Store stats_tracker
+        self.stats_tracker = stats_tracker 
+        self.note_generator = note_generator
 
         self.target_note_var = tk.StringVar(value=target_note)
         self.detected_note_var = tk.StringVar(value="None")
+        self.note_enabled_var = [tk.BooleanVar(value=True) for note in NOTE_NAMES_SHARP_AND_FLAT]
         self.queue_vars = [tk.StringVar(value=note) for note in note_queue]
         self.correct_note_count_var = tk.StringVar(value="0")
         self.incorrect_note_count_var = tk.StringVar(value="0")
@@ -24,7 +29,6 @@ class NoteTrainerGUI:
         self._setup_gui()
 
     def _setup_gui(self):
-
         # Create a style object
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -45,13 +49,21 @@ class NoteTrainerGUI:
                      anchor='center')
 
         # Set up equal row distribution
-        for i in range(12):
-            frame.grid_rowconfigure(i, weight=1)  # 12 evenly distributed rows
+        for row in range(15):
+            frame.grid_rowconfigure(row, weight=1)
 
-        for j in range(12):
-            frame.grid_columnconfigure(j, weight=1)
+        for column in range(12):
+            frame.grid_columnconfigure(column, weight=1)
 
         # Create All Elements
+        note_checkboxes = []
+        for idx, note_name in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
+            note_checkboxes.append(ttk.Checkbutton(
+                frame, 
+                text=f"{note_name}", 
+                variable=self.note_enabled_var[idx], 
+                command=partial(self.update_enabled_note, note_name, idx))) # ???
+
         detected_note_text = ttk.Label(frame, text="Detected", font=('Helvetica', 24))
         detected_note_label = ttk.Label(frame, textvariable=self.detected_note_var, font=('Helvetica', 36))
 
@@ -72,9 +84,10 @@ class NoteTrainerGUI:
         note_time_avg_label = []
         black_keys = [1, 2, 4, 5, 8, 9, 11, 12, 14, 15]
         for idx in range(17):
-            style_name = 'WhiteKey.TLabel'
             if idx in black_keys:
                 style_name = 'BlackKey.TLabel'
+            else:
+                style_name = 'WhiteKey.TLabel'
 
             note_info_text.append(ttk.Label(frame, textvariable=self.note_info_array[idx], style=style_name))
             note_time_avg_label.append(ttk.Label(frame, textvariable=self.note_time_avg_array[idx], style=style_name))
@@ -88,22 +101,25 @@ class NoteTrainerGUI:
         quick_copy_button = ttk.Button(frame, text="Copy Quick Stats", command=self.copy_quick_stats_to_clipboard)
 
         # Layout Time
-        detected_note_text.grid(column=0, row=0, columnspan=3, padx=5, pady=0)
-        detected_note_label.grid(column=0, row=1, columnspan=3, padx=5, pady=5)
+        for idx, note in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
+            note_checkboxes[idx].grid(column=idx//5, row=0+idx%5, padx=5, pady=0)
 
-        correct_note_text.grid(column=3, row=0, columnspan=2, padx=5, pady=0)
-        correct_note_label.grid(column=3, row=1, columnspan=2, padx=5, pady=5)
+        detected_note_text.grid(column=0, row=5, columnspan=3, padx=5, pady=0)
+        detected_note_label.grid(column=0, row=6, columnspan=3, padx=5, pady=5)
 
-        incorrect_note_text.grid(column=5, row=0, columnspan=2, padx=5, pady=0)
-        incorrect_note_label.grid(column=5, row=1, columnspan=2, padx=5, pady=5)
+        correct_note_text.grid(column=3, row=5, columnspan=2, padx=5, pady=0)
+        correct_note_label.grid(column=3, row=6, columnspan=2, padx=5, pady=5)
 
-        note_accuracy_text.grid(column=7, row=0, columnspan=2, padx=5, pady=0)
-        note_accuracy_label.grid(column=7, row=1, columnspan=2, padx=5, pady=5)
+        incorrect_note_text.grid(column=5, row=5, columnspan=2, padx=5, pady=0)
+        incorrect_note_label.grid(column=5, row=6, columnspan=2, padx=5, pady=5)
 
-        average_time_text.grid(column=9, row=0, columnspan=2, padx=5, pady=0)
-        average_time_label.grid(column=9, row=1, columnspan=2, padx=5, pady=5)
+        note_accuracy_text.grid(column=7, row=5, columnspan=2, padx=5, pady=0)
+        note_accuracy_label.grid(column=7, row=6, columnspan=2, padx=5, pady=5)
 
-        ttk.Label(frame, text="Avg. Note Time", font=('Helvetica', 24)).grid(column=0, row=2, columnspan=12, padx=5, pady=5)
+        average_time_text.grid(column=9, row=5, columnspan=2, padx=5, pady=0)
+        average_time_label.grid(column=9, row=6, columnspan=2, padx=5, pady=5)
+
+        ttk.Label(frame, text="Avg. Note Time", font=('Helvetica', 24)).grid(column=0, row=7, columnspan=12, padx=5, pady=5)
 
         index = 0  # Initialize the index for the note_info_text and note_time_avg_label lists
 
@@ -111,34 +127,39 @@ class NoteTrainerGUI:
         for column in range(12):
             if column in black_keys:
                 # Place the first set of items in the column
-                note_info_text[index].grid(column=column, row=3, rowspan=1, padx=0, pady=0, sticky='nsew')
-                note_time_avg_label[index].grid(column=column, row=4, rowspan=1, padx=0, pady=0, sticky='nsew')
+                note_info_text[index].grid(column=column, row=8, rowspan=1, padx=0, pady=0, sticky='nsew')
+                note_time_avg_label[index].grid(column=column, row=9, rowspan=1, padx=0, pady=0, sticky='nsew')
                 index += 1  # Move to the next index
 
                 # Place the second set of items in the column
-                note_info_text[index].grid(column=column, row=5, rowspan=1, padx=0, pady=0, sticky='nsew')
-                note_time_avg_label[index].grid(column=column, row=6, rowspan=1, padx=0, pady=0, sticky='nsew')
+                note_info_text[index].grid(column=column, row=10, rowspan=1, padx=0, pady=0, sticky='nsew')
+                note_time_avg_label[index].grid(column=column, row=11, rowspan=1, padx=0, pady=0, sticky='nsew')
                 index += 1  # Move to the next index
             else:
                 # Place a single set of items in the column
-                note_info_text[index].grid(column=column, row=3, rowspan=2, padx=0, pady=0, sticky='nsew')
-                note_time_avg_label[index].grid(column=column, row=5, rowspan=2, padx=0, pady=0, sticky='nsew')
+                note_info_text[index].grid(column=column, row=8, rowspan=2, padx=0, pady=0, sticky='nsew')
+                note_time_avg_label[index].grid(column=column, row=10, rowspan=2, padx=0, pady=0, sticky='nsew')
                 index += 1  # Move to the next index
 
-        ttk.Label(frame, text="Notes", font=('Helvetica', 24)).grid(column=0, row=7, columnspan=12, padx=5, pady=5)
+        ttk.Label(frame, text="Notes", font=('Helvetica', 24)).grid(column=0, row=12, columnspan=12, padx=5, pady=5)
 
-        target_note_text.grid(column=0, row=8, columnspan=2, padx=0, pady=5)
-        target_note_label.grid(column=0, row=9, columnspan=2, padx=0, pady=5)
+        target_note_text.grid(column=0, row=13, columnspan=2, padx=0, pady=5)
+        target_note_label.grid(column=0, row=14, columnspan=2, padx=0, pady=5)
 
         # Fill out the queue
         for idx, var in enumerate(self.queue_vars):
             label = ttk.Label(frame, textvariable=var, font=('Helvetica', 60))
-            label.grid(column=2 + 2 * idx, row=9, columnspan=2, padx=0, pady=5)
+            label.grid(column=2 + 2 * idx, row=14, columnspan=2, padx=0, pady=5)
 
         # Place the buttons on the grid on row 10
-        reset_button.grid(column=3, row=10, columnspan=2, padx=5, pady=5)
-        copy_button.grid(column=5, row=10, columnspan=2, padx=5, pady=5)
-        quick_copy_button.grid(column=7, row=10, columnspan=2, padx=5, pady=5)
+        reset_button.grid(column=3, row=15, columnspan=2, padx=5, pady=5)
+        copy_button.grid(column=5, row=15, columnspan=2, padx=5, pady=5)
+        quick_copy_button.grid(column=7, row=15, columnspan=2, padx=5, pady=5)
+
+    def update_enabled_note(self, note, idx):
+        enabled = self.note_enabled_var[idx].get()
+        self.note_generator.set_note_enabled(note, enabled)
+
 
     def update_detected_note(self, note):
         self.detected_note_var.set(note)

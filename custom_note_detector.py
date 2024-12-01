@@ -12,7 +12,7 @@ class GUINoteDetector(NoteDetector):
         self.target_note = note
 
     def on_note_detected(self, note, octave, pitch, cents_difference):
-        detected_note = f"{note_to_text(note)}"
+        detected_note = f"{note_index_to_text(note)}"
         # Send message to GUI via queue
         if self.gui_queue is not None:
             message = {'type': 'NoteDetected', 'note': detected_note}
