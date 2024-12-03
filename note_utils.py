@@ -35,3 +35,12 @@ def text_to_note_index(note):
         note = "Text To Note Error"
 
     return note
+
+def text_is_sharp(note):
+    return note in NOTE_NAMES_SHARP_ONLY
+
+def text_is_flat(note):
+    return note in NOTE_NAMES_FLAT_ONLY
+
+def text_is_natural(note):
+    return note in NOTE_NAMES_NATURAL_ONLY

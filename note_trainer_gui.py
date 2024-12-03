@@ -5,6 +5,7 @@ from tkinter import ttk, messagebox  # Imported messagebox for pop-up messages
 from config import *
 from note_generator import NoteGenerator
 from functools import partial
+from note_utils import text_is_sharp, text_is_flat, text_is_natural 
 
 class NoteTrainerGUI:
     def __init__(self, root, target_note, note_queue, stats_tracker, note_generator):
@@ -62,7 +63,7 @@ class NoteTrainerGUI:
                 frame, 
                 text=f"{note_name}", 
                 variable=self.note_enabled_var[idx], 
-                command=partial(self.update_enabled_note, note_name, idx))) # ???
+                command=partial(self.update_enabled_note, note_name, idx)))
 
         detected_note_text = ttk.Label(frame, text="Detected", font=('Helvetica', 24))
         detected_note_label = ttk.Label(frame, textvariable=self.detected_note_var, font=('Helvetica', 36))
@@ -92,17 +93,27 @@ class NoteTrainerGUI:
             note_info_text.append(ttk.Label(frame, textvariable=self.note_info_array[idx], style=style_name))
             note_time_avg_label.append(ttk.Label(frame, textvariable=self.note_time_avg_array[idx], style=style_name))
 
-        target_note_text = ttk.Label(frame, text="Target Note", font=('Helvetica', 24))
+        target_note_text = ttk.Label(frame, text="Target Note", font=('Helvetica', 12))
         target_note_label = ttk.Label(frame, textvariable=self.target_note_var, font=('Helvetica', 60, 'bold'))
 
         # Create the buttons
-        reset_button = ttk.Button(frame, text="Reset Stats", command=self.reset_stats)
+        regen_queue_button = ttk.Button(frame, text="Reset Queue", command=self.reset_queue)
+        reset_stats_button = ttk.Button(frame, text="Reset Stats", command=self.reset_stats)
         copy_button = ttk.Button(frame, text="Copy Full Stats", command=self.copy_stats_to_clipboard)
         quick_copy_button = ttk.Button(frame, text="Copy Quick Stats", command=self.copy_quick_stats_to_clipboard)
 
         # Layout Time
+        ttk.Label(frame, text="Notes To Generate", font=('Helvetica', 18)).grid(column=0, row=0, columnspan=3, padx=5, pady=5)
+        checkbox_row = 0
         for idx, note in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
-            note_checkboxes[idx].grid(column=idx//5, row=0+idx%5, padx=5, pady=0)
+            if text_is_natural(note):
+                note_checkboxes[idx].grid(column=1*(checkbox_row//4), row=1+checkbox_row%4, columnspan = 1, padx=10, pady=0, sticky='ew')
+                checkbox_row += 1
+            elif text_is_sharp(note):
+                note_checkboxes[idx].grid(column=1*(checkbox_row//4), row=1+checkbox_row%4, padx=10, pady=0, sticky='w')
+            else:
+                note_checkboxes[idx].grid(column=1*(checkbox_row//4), row=1+checkbox_row%4, padx=0, pady=0, sticky='e')
+                checkbox_row += 1
 
         detected_note_text.grid(column=0, row=5, columnspan=3, padx=5, pady=0)
         detected_note_label.grid(column=0, row=6, columnspan=3, padx=5, pady=5)
@@ -152,9 +163,10 @@ class NoteTrainerGUI:
             label.grid(column=2 + 2 * idx, row=14, columnspan=2, padx=0, pady=5)
 
         # Place the buttons on the grid on row 10
-        reset_button.grid(column=3, row=15, columnspan=2, padx=5, pady=5)
-        copy_button.grid(column=5, row=15, columnspan=2, padx=5, pady=5)
-        quick_copy_button.grid(column=7, row=15, columnspan=2, padx=5, pady=5)
+        regen_queue_button.grid(column=2, row=15, columnspan=2, padx=5, pady=5, sticky='ew')
+        reset_stats_button.grid(column=4, row=15, columnspan=2, padx=5, pady=5, sticky='ew')
+        copy_button.grid(column=6, row=15, columnspan=2, padx=5, pady=5, sticky='ew')
+        quick_copy_button.grid(column=8, row=15, columnspan=2, padx=5, pady=5, sticky='ew')
 
     def update_enabled_note(self, note, idx):
         enabled = self.note_enabled_var[idx].get()
@@ -187,6 +199,10 @@ class NoteTrainerGUI:
             note_plays = stats_tracker.get_note_plays(note)
             self.note_time_avg_array[idx].set(f"{avg_time:.2f}")
             self.note_info_array[idx].set(f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n({note_plays})")
+
+    def reset_queue(self):
+        print("Lol I'm not implemented yet")
+        
 
     # Method to reset statistics
     def reset_stats(self):

@@ -17,7 +17,7 @@ class NoteGenerator:
         for note in self.enabled_roots:
             if not self.enabled_roots[note]:
                 continue  # Skip disabled notes
-            if note != last_note: # Skip immediate repeats
+            if text_to_note_index(note) != text_to_note_index(last_note): # Skip immediate repeats
                 valid_notes.append(note)
 
         return valid_notes

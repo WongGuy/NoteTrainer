@@ -48,4 +48,4 @@ class NoteDetector:
 
     def on_note_detected(self, note, octave, pitch, cents_difference):
         """Callback when a note is detected. Override for custom actions."""
-        print(f"Detected note: {note_to_text(note)}{octave} ({pitch:.2f} Hz) ({cents_difference} cents)")
+        print(f"Detected note: {note_index_to_text(note)}{octave} ({pitch:.2f} Hz) ({cents_difference} cents)")
