@@ -13,6 +13,8 @@ from note_trainer_gui import NoteTrainerGUI
 from audio_handler import AudioHandler
 from stats_tracker import StatsTracker
 from device_config import DeviceConfig
+from note_queue import NoteQueue
+
 
 def main():
     # Create a temporary root window for the device selection dialog
@@ -39,16 +41,14 @@ def main():
 
     # Initialize NoteGenerator
     note_generator = NoteGenerator()
+    note_queue = NoteQueue(note_generator, QUEUE_SIZE)
 
     # Initialize Target Note and Note Queue
-    target_note = note_generator.get_note('')
-    note_queue = note_generator.get_note_queue(QUEUE_SIZE, target_note)
+    # target_note = note_generator.get_note('')
+    # note_queue = note_generator.get_note_queue(QUEUE_SIZE, target_note)
 
     # Initialize StatsTracker
     stats_tracker = StatsTracker()
-
-    # Initialize GUI
-    gui = NoteTrainerGUI(root, target_note, note_queue, stats_tracker, note_generator)
 
     # For thread-safe communication, we'll use a queue
     gui_queue = Queue()
@@ -64,7 +64,10 @@ def main():
         target_channel=device_config.target_channel,
         gui_queue=gui_queue  # Pass the queue to the note detector
     )
-    note_detector.set_target_note(target_note)
+    note_detector.set_target_note(note_queue.get_target_note())
+
+    # Initialize GUI
+    gui = NoteTrainerGUI(root, stats_tracker, note_generator, note_queue, note_detector)
 
     # Define the audio callback function
     def audio_callback(indata, frames, time, status):
@@ -95,14 +98,12 @@ def main():
                     if text_to_note_index(detected_note) == text_to_note_index(note_detector.target_note):
                         # Update stats tracker
                         stats_tracker.increment_correct_notes(note_detector.target_note)
-                        # Move the first note in the note queue to be the new target note
-                        new_target_note = note_queue.pop(0)
-                        note_detector.set_target_note(new_target_note)
-                        # Add a new random note to the end of the queue
-                        new_note = note_generator.get_note(note_queue[-1])
-                        note_queue.append(new_note)
-                        # Update the queue display variables
-                        gui.update_target_note_and_queue(new_target_note, note_queue)
+                        # Update the note queue
+                        note_queue.process_correct_note_detected()
+                        # Update the note detector with the new target note
+                        note_detector.set_target_note(note_queue.get_target_note())
+                        # Update the GUI
+                        gui.update_target_note_and_queue(note_queue.get_target_note(), note_queue.get_note_queue())
                     else:
                         stats_tracker.increment_incorrect_notes()
                     # Update the GUI with stats from stats_tracker
@@ -112,6 +113,7 @@ def main():
             pass
         # Schedule the function to run again after 50 ms
         root.after(50, check_queue)
+
 
     # Start checking the queue
     root.after(50, check_queue)

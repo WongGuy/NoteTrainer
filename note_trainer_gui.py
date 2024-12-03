@@ -6,19 +6,24 @@ from config import *
 from note_generator import NoteGenerator
 from functools import partial
 from note_utils import text_is_sharp, text_is_flat, text_is_natural 
+from note_queue import NoteQueue
+from note_detector import NoteDetector
 
 class NoteTrainerGUI:
-    def __init__(self, root, target_note, note_queue, stats_tracker, note_generator):
+    def __init__(self, root, stats_tracker, note_generator, note_queue, note_detector):
         
         self.root = root
         self.root.geometry("1080x960")
         self.stats_tracker = stats_tracker 
         self.note_generator = note_generator
+        self.note_queue = note_queue
+        self.note_detector = note_detector
 
-        self.target_note_var = tk.StringVar(value=target_note)
+        self.target_note_var = tk.StringVar(value=self.note_queue.get_target_note())
+        self.queue_vars = [tk.StringVar(value=note) for note in self.note_queue.get_note_queue()]
+
         self.detected_note_var = tk.StringVar(value="None")
         self.note_enabled_var = [tk.BooleanVar(value=True) for note in NOTE_NAMES_SHARP_AND_FLAT]
-        self.queue_vars = [tk.StringVar(value=note) for note in note_queue]
         self.correct_note_count_var = tk.StringVar(value="0")
         self.incorrect_note_count_var = tk.StringVar(value="0")
         self.note_accuracy_var = tk.StringVar(value="0%")
@@ -169,8 +174,13 @@ class NoteTrainerGUI:
         quick_copy_button.grid(column=8, row=15, columnspan=2, padx=5, pady=5, sticky='ew')
 
     def update_enabled_note(self, note, idx):
-        enabled = self.note_enabled_var[idx].get()
-        self.note_generator.set_note_enabled(note, enabled)
+        num_checked = sum(var.get() for var in self.note_enabled_var)
+        if num_checked < 3:
+            self.note_enabled_var[idx].set(1)
+            messagebox.showinfo("Minimum Selection", "At least 3 notes must be selected.")
+        else:
+            enabled = self.note_enabled_var[idx].get()
+            self.note_generator.set_note_enabled(note, enabled)
 
 
     def update_detected_note(self, note):
@@ -183,6 +193,7 @@ class NoteTrainerGUI:
                 var.set(note_queue[idx])
             else:
                 var.set('')
+
 
     def update_stats(self, stats_tracker):
         # Update correct and incorrect note counts
@@ -201,7 +212,9 @@ class NoteTrainerGUI:
             self.note_info_array[idx].set(f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n({note_plays})")
 
     def reset_queue(self):
-        print("Lol I'm not implemented yet")
+        self.note_queue.reset_queue()
+        self.update_target_note_and_queue(self.note_queue.get_target_note(), self.note_queue.get_note_queue())
+        self.note_detector.set_target_note(self.note_queue.get_target_note())
         
 
     # Method to reset statistics
