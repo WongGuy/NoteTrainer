@@ -6,7 +6,6 @@ import tkinter as tk
 from tkinter import messagebox
 from config import *
 from audio_device import get_device_info
-from note_generator import NoteGenerator
 from note_utils import text_to_note_index
 from custom_note_detector import GUINoteDetector
 from note_trainer_gui import NoteTrainerGUI
@@ -39,21 +38,10 @@ def main():
     root = tk.Tk()
     root.title("Note Trainer")
 
-    # Initialize NoteGenerator
-    note_generator = NoteGenerator()
-    note_queue = NoteQueue(note_generator, QUEUE_SIZE)
-
-    # Initialize Target Note and Note Queue
-    # target_note = note_generator.get_note('')
-    # note_queue = note_generator.get_note_queue(QUEUE_SIZE, target_note)
-
-    # Initialize StatsTracker
+    note_queue = NoteQueue(QUEUE_SIZE)
     stats_tracker = StatsTracker()
-
-    # For thread-safe communication, we'll use a queue
     gui_queue = Queue()
 
-    # Initialize GUINoteDetector
     note_detector = GUINoteDetector(
         buffer_size=BUFFER_SIZE,
         hop_size=HOP_SIZE,
@@ -67,7 +55,7 @@ def main():
     note_detector.set_target_note(note_queue.get_target_note())
 
     # Initialize GUI
-    gui = NoteTrainerGUI(root, stats_tracker, note_generator, note_queue, note_detector)
+    gui = NoteTrainerGUI(root, stats_tracker, note_queue, note_detector)
 
     # Define the audio callback function
     def audio_callback(indata, frames, time, status):

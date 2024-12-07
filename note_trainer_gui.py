@@ -3,19 +3,17 @@
 import tkinter as tk
 from tkinter import ttk, messagebox  # Imported messagebox for pop-up messages
 from config import *
-from note_generator import NoteGenerator
 from functools import partial
 from note_utils import text_is_sharp, text_is_flat, text_is_natural 
 from note_queue import NoteQueue
 from note_detector import NoteDetector
 
 class NoteTrainerGUI:
-    def __init__(self, root, stats_tracker, note_generator, note_queue, note_detector):
+    def __init__(self, root, stats_tracker, note_queue, note_detector):
         
         self.root = root
         self.root.geometry("1080x960")
         self.stats_tracker = stats_tracker 
-        self.note_generator = note_generator
         self.note_queue = note_queue
         self.note_detector = note_detector
 
@@ -180,7 +178,7 @@ class NoteTrainerGUI:
             messagebox.showinfo("Minimum Selection", "At least 3 notes must be selected.")
         else:
             enabled = self.note_enabled_var[idx].get()
-            self.note_generator.set_note_enabled(note, enabled)
+            self.note_queue.set_note_enabled(note, enabled)
 
 
     def update_detected_note(self, note):
