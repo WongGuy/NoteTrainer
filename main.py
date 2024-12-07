@@ -45,11 +45,12 @@ def main():
         buffer_size=BUFFER_SIZE,
         hop_size=HOP_SIZE,
         samplerate=SAMPLERATE,
-        silence_threshold=SILENCE,
+        silence_threshold=device_config.silence,
         min_freq=MIN_FREQUENCY,
         max_freq=MAX_FREQUENCY,
         target_channel=device_config.target_channel,
-        gui_queue=gui_queue  # Pass the queue to the note detector
+        A4=device_config.A4,
+        gui_queue=gui_queue 
     )
 
     # Initialize GUI

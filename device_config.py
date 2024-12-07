@@ -12,6 +12,8 @@ class DeviceConfig(tk.simpledialog.Dialog):
         self.device_id = None
         self.total_input_channels = None
         self.target_channel = None
+        self.silence = 48
+        self.A4 = 440
         super().__init__(parent, title=title)
 
     def body(self, master):
@@ -57,6 +59,49 @@ class DeviceConfig(tk.simpledialog.Dialog):
         # Set the initial target input channel label
         self.update_channel_info(self.device_var.get())
 
+         # Silence Selection
+        tk.Label(master, text="Silence (-dB):").grid(row=2, column=0, sticky="w")
+        self.silence_var = tk.IntVar()
+        self.silence_var.set(48)  # Default silence value
+
+        self.silence_menu_button = tk.Menubutton(master, textvariable=self.silence_var, relief="raised")
+        self.silence_menu_button.menu = tk.Menu(self.silence_menu_button, tearoff=0)
+        self.silence_menu_button["menu"] = self.silence_menu_button.menu
+
+        silence_options = [6, 12, 18, 24, 30, 36, 42, 48]
+        for s in silence_options:
+            self.silence_menu_button.menu.add_radiobutton(
+                label=str(s),
+                variable=self.silence_var,
+                value=s
+            )
+
+        self.silence_menu_button.grid(row=2, column=1, sticky="w")
+
+        # A4 Selection
+        tk.Label(master, text="A4 (Hz):").grid(row=3, column=0, sticky="w")
+        self.A4_var = tk.IntVar()
+        self.A4_var.set(440)  # Default A4 value
+
+        self.A4_menu_button = tk.Menubutton(master, textvariable=self.A4_var, relief="raised")
+        self.A4_menu_button.menu = tk.Menu(self.A4_menu_button, tearoff=0)
+        self.A4_menu_button["menu"] = self.A4_menu_button.menu
+
+        A4_options = [432, 434, 436, 438, 440, 442, 444, 446]
+        for a in A4_options:
+            if a == 440:
+                font = ("TkDefaultFont", 10, "bold")
+            else:
+                font = "TkDefaultFont"
+            self.A4_menu_button.menu.add_radiobutton(
+                label=str(a),
+                variable=self.A4_var,
+                value=a,
+                font=font
+            )
+
+        self.A4_menu_button.grid(row=3, column=1, sticky="w")
+
         return self.device_menu_button  # initial focus
 
     def update_channel_info(self, selected_device):
@@ -83,6 +128,8 @@ class DeviceConfig(tk.simpledialog.Dialog):
         # Get selected device name from dropdown
         selected_device = self.device_var.get()
         target_channel = self.channel_var.get()
+        selected_silence = self.silence_var.get()
+        selected_A4 = self.A4_var.get()
 
         # Extract device name (before the channel information)
         device_name = selected_device.split(" (Channels:")[0].strip()
@@ -103,3 +150,5 @@ class DeviceConfig(tk.simpledialog.Dialog):
             return
 
         self.target_channel = target_channel
+        self.silence = selected_silence
+        self.A4 = selected_A4

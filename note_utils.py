@@ -3,7 +3,7 @@
 import numpy as np
 from config import *
 
-def frequency_to_note(freq):
+def frequency_to_note(freq, A4):
     if freq <= 0:
         return "Silence"
     

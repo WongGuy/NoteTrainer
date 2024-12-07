@@ -3,7 +3,7 @@ import numpy as np
 from note_utils import *
 
 class NoteDetector:
-    def __init__(self, buffer_size, hop_size, samplerate, silence_threshold, min_freq, max_freq, target_channel):
+    def __init__(self, buffer_size, hop_size, samplerate, silence_threshold, min_freq, max_freq, target_channel, A4):
         self.buffer_size = buffer_size
         self.hop_size = hop_size
         self.samplerate = samplerate
@@ -11,6 +11,7 @@ class NoteDetector:
         self.min_freq = min_freq
         self.max_freq = max_freq
         self.target_channel = target_channel
+        self.A4 = A4
 
         # Initialize Aubio pitch detector
         self.pitch_detector = aubio.pitch("yin", self.buffer_size, self.hop_size, self.samplerate)
@@ -29,7 +30,7 @@ class NoteDetector:
         pitch = self.pitch_detector(selected_channel_data.astype(np.float32))[0]
 
         if self.min_freq < pitch < self.max_freq:
-            note, octave, cents_difference = frequency_to_note(pitch)
+            note, octave, cents_difference = frequency_to_note(pitch, self.A4)
             current_state = f"{note},{octave}"
 
             if current_state == self.previous_state:
