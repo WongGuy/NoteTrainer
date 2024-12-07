@@ -7,17 +7,69 @@ from config import NOTE_NAMES_SHARP_AND_FLAT
 class NoteQueue:
     def __init__(self, queue_size):
         self.enabled_roots = {note: True for note in NOTE_NAMES_SHARP_AND_FLAT}
+        self.enabled_tones = ['1']
         self.queue_size = queue_size
-        # Initialize the target note
-        self.target_note = self.get_note('')
-        # Initialize the note queue
-        self.note_queue = self.initialize_note_queue(self.queue_size, self.target_note)
+        
+        self.notes_bag = self.generate_notes_bag('')
+        self.notes_queue = []
+        for i in range(self.queue_size):
+            self.notes_queue.append(self.get_notes_from_bag())
     
-    def get_valid_roots(self, last_note): 
-        # Build the valid notes list based on the constraints
-        valid_notes = []
+    def generate_notes_bag(self, last_root):
+        enabled_roots = self.get_enabled_roots()
+        if not enabled_roots:
+            raise ValueError("No enabled roots available.")
+        root_bag = enabled_roots * 2
+        total_roots = len(root_bag)
 
-        # Filter notes based on sharps_enabled and flats_enabled
+        last_note_index = text_to_note_index(last_root)
+
+        max_shuffle_attempts = 1000
+        for attempt in range(max_shuffle_attempts):
+            shuffled_bag = root_bag.copy()
+            random.shuffle(shuffled_bag)
+
+            # Check if the first note does not match the last_note
+            first_root_index = text_to_note_index(shuffled_bag[0])
+            if first_root_index == last_note_index:
+                continue  # Retry shuffle
+
+            # Check that no two consecutive notes are enharmonically equivalent
+            valid = True
+            for i in range(1, total_roots):
+                prev_index = text_to_note_index(shuffled_bag[i - 1])
+                current_index = text_to_note_index(shuffled_bag[i])
+                if current_index == prev_index:
+                    valid = False
+                    break  # Invalid shuffle, retry
+
+            if valid:
+                notes_bag = []
+                for root in shuffled_bag:
+                    notes = {}
+                    notes['root'] = root
+                    notes['tones'] = self.enabled_tones
+                    notes_bag.append(notes)
+                
+                return notes_bag
+        
+        # If no valid shuffle is found after max_shuffle_attempts, raise an error
+        raise ValueError("Unable to generate a valid note bag with the given constraints.")
+
+    def get_notes_from_bag(self):
+        print(f"{(len(self.notes_bag))} Notes in Bag")
+        if len(self.notes_bag) == 1:
+            last_notes = self.notes_bag.pop(0)
+            self.notes_bag = self.generate_notes_bag(last_notes['root'])
+            
+            print(f"last note is {last_notes}")
+
+            return last_notes
+        return self.notes_bag.pop()
+
+
+    def get_valid_notes(self, last_note): 
+        valid_notes = []
         for note in self.enabled_roots:
             if not self.enabled_roots[note]:
                 continue  # Skip disabled notes
@@ -26,24 +78,7 @@ class NoteQueue:
 
         return valid_notes
 
-    def get_note(self, last_note): #TODO: This should be get root
-        valid_notes = self.get_valid_roots(last_note)
-        if not valid_notes:
-            raise ValueError("No valid notes available to generate.")
-        return random.choice(valid_notes)
-
-    def initialize_note_queue(self, queue_size, last_note): #TODO: This should be get root queue
-        note_queue = []
-        current_last_note = last_note
-
-        for _ in range(queue_size):
-            new_note = self.get_note(current_last_note)
-            note_queue.append(new_note)
-            current_last_note = new_note  # Update the last note
-
-        return note_queue
-
-    def set_note_enabled(self, note, enabled): #TODO: This should be set root enabled
+    def set_root_enabled(self, note, enabled):
         if note in self.enabled_roots:
             self.enabled_roots[note] = enabled
         else:
@@ -53,19 +88,21 @@ class NoteQueue:
         return [note for note, enabled in self.enabled_roots.items() if enabled]
 
     def get_target_note(self):
-        return self.target_note
+        # TODO: support non root tones
+        return self.notes_queue[0]['root']
     
-    def get_note_queue(self):
-        return self.note_queue.copy()
+    def get_notes_queue(self):
+        return self.notes_queue.copy()
     
     def process_correct_note_detected(self):
-        # Move the first note in the note queue to be the new target note
-        self.target_note = self.note_queue.pop(0)
-        # Add a new random note to the end of the queue
-        last_note = self.note_queue[-1] if self.note_queue else self.target_note
-        new_note = self.get_note(last_note)
-        self.note_queue.append(new_note)
+        self.notes_queue.pop(0)
+        new_note = self.get_notes_from_bag()
+        print(f"Aquired new note of {new_note}")
+        self.notes_queue.append(new_note)
     
     def reset_queue(self):
-        self.target_note = self.get_note('')
-        self.note_queue = self.initialize_note_queue(self.queue_size, self.target_note)
+        self.notes_bag = self.generate_notes_bag('')
+        self.notes_queue = []
+        for _ in range(self.queue_size):
+            self.notes_queue.append(self.get_notes_from_bag())
+

@@ -16,5 +16,5 @@ NOTE_NAMES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', '
 NOTE_NAMES_FLAT_ONLY = ['Db', 'Eb', 'Gb', 'Ab', 'Bb']
 NOTE_NAMES_NATURAL_ONLY = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
 NOTE_NAMES_SHARP_AND_FLAT = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B']
-QUEUE_SIZE = 5
+QUEUE_SIZE = 4
 PAUSE_TIME_SECONDS = 15

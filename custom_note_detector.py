@@ -8,9 +8,6 @@ class GUINoteDetector(NoteDetector):
         self.gui_queue = gui_queue
         self.target_note = None  # Will be set in main.py
 
-    def set_target_note(self, note):
-        self.target_note = note
-
     def on_note_detected(self, note, octave, pitch, cents_difference):
         detected_note = f"{note_index_to_text(note)}"
         # Send message to GUI via queue

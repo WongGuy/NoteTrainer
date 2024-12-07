@@ -30,9 +30,6 @@ def main():
 
     # Get device info
     device_info = get_device_info(device_config.device_id)
-    actual_samplerate = device_info['default_samplerate']
-    print(f"Actual device sample rate: {actual_samplerate} Hz")
-    print(f"Assumed device sample rate: {SAMPLERATE} Hz")
 
     # Initialize Tkinter window
     root = tk.Tk()
@@ -52,7 +49,6 @@ def main():
         target_channel=device_config.target_channel,
         gui_queue=gui_queue  # Pass the queue to the note detector
     )
-    note_detector.set_target_note(note_queue.get_target_note())
 
     # Initialize GUI
     gui = NoteTrainerGUI(root, stats_tracker, note_queue, note_detector)
@@ -83,15 +79,13 @@ def main():
                     detected_note = message['note']
                     gui.update_detected_note(detected_note)
                     # Check if detected note matches target note
-                    if text_to_note_index(detected_note) == text_to_note_index(note_detector.target_note):
+                    if text_to_note_index(detected_note) == text_to_note_index(note_queue.get_target_note()):
                         # Update stats tracker
-                        stats_tracker.increment_correct_notes(note_detector.target_note)
+                        stats_tracker.increment_correct_notes(note_queue.get_target_note())
                         # Update the note queue
                         note_queue.process_correct_note_detected()
-                        # Update the note detector with the new target note
-                        note_detector.set_target_note(note_queue.get_target_note())
                         # Update the GUI
-                        gui.update_target_note_and_queue(note_queue.get_target_note(), note_queue.get_note_queue())
+                        gui.update_target_note_and_queue(note_queue.get_notes_queue())
                     else:
                         stats_tracker.increment_incorrect_notes()
                     # Update the GUI with stats from stats_tracker

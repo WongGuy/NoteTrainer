@@ -17,8 +17,7 @@ class NoteTrainerGUI:
         self.note_queue = note_queue
         self.note_detector = note_detector
 
-        self.target_note_var = tk.StringVar(value=self.note_queue.get_target_note())
-        self.queue_vars = [tk.StringVar(value=note) for note in self.note_queue.get_note_queue()]
+        self.target_roots_queue_vars = [tk.StringVar(value=notes['root']) for notes in self.note_queue.get_notes_queue()]
 
         self.detected_note_var = tk.StringVar(value="None")
         self.note_enabled_var = [tk.BooleanVar(value=True) for note in NOTE_NAMES_SHARP_AND_FLAT]
@@ -97,7 +96,6 @@ class NoteTrainerGUI:
             note_time_avg_label.append(ttk.Label(frame, textvariable=self.note_time_avg_array[idx], style=style_name))
 
         target_note_text = ttk.Label(frame, text="Target Note", font=('Helvetica', 12))
-        target_note_label = ttk.Label(frame, textvariable=self.target_note_var, font=('Helvetica', 60, 'bold'))
 
         # Create the buttons
         regen_queue_button = ttk.Button(frame, text="Reset Queue", command=self.reset_queue)
@@ -158,12 +156,11 @@ class NoteTrainerGUI:
         ttk.Label(frame, text="Notes", font=('Helvetica', 24)).grid(column=0, row=12, columnspan=12, padx=5, pady=5)
 
         target_note_text.grid(column=0, row=13, columnspan=2, padx=0, pady=5)
-        target_note_label.grid(column=0, row=14, columnspan=2, padx=0, pady=5)
 
-        # Fill out the queue
-        for idx, var in enumerate(self.queue_vars):
-            label = ttk.Label(frame, textvariable=var, font=('Helvetica', 60))
-            label.grid(column=2 + 2 * idx, row=14, columnspan=2, padx=0, pady=5)
+        # Fill out the notes queue
+        for idx, var in enumerate(self.target_roots_queue_vars):
+            label = ttk.Label(frame, textvariable=var, font=('Helvetica', 72, 'bold'), anchor="center")
+            label.grid(column=idx*3, row=14, columnspan=3, padx=0, pady=5)
 
         # Place the buttons on the grid on row 10
         regen_queue_button.grid(column=2, row=15, columnspan=2, padx=5, pady=5, sticky='ew')
@@ -173,24 +170,20 @@ class NoteTrainerGUI:
 
     def update_enabled_note(self, note, idx):
         num_checked = sum(var.get() for var in self.note_enabled_var)
-        if num_checked < 3:
+        if num_checked < 5:
             self.note_enabled_var[idx].set(1)
-            messagebox.showinfo("Minimum Selection", "At least 3 notes must be selected.")
+            messagebox.showinfo("Minimum Selection", "At least 5 notes must be selected.")
         else:
             enabled = self.note_enabled_var[idx].get()
-            self.note_queue.set_note_enabled(note, enabled)
+            self.note_queue.set_root_enabled(note, enabled)
 
 
     def update_detected_note(self, note):
         self.detected_note_var.set(note)
 
-    def update_target_note_and_queue(self, new_target_note, note_queue):
-        self.target_note_var.set(new_target_note)
-        for idx, var in enumerate(self.queue_vars):
-            if idx < len(note_queue):
-                var.set(note_queue[idx])
-            else:
-                var.set('')
+    def update_target_note_and_queue(self, notes_queue):
+        for idx, var in enumerate(self.target_roots_queue_vars):
+            var.set(notes_queue[idx]['root'])
 
 
     def update_stats(self, stats_tracker):
@@ -211,8 +204,7 @@ class NoteTrainerGUI:
 
     def reset_queue(self):
         self.note_queue.reset_queue()
-        self.update_target_note_and_queue(self.note_queue.get_target_note(), self.note_queue.get_note_queue())
-        self.note_detector.set_target_note(self.note_queue.get_target_note())
+        self.update_target_note_and_queue(self.note_queue.get_notes_queue())
         
 
     # Method to reset statistics
@@ -224,7 +216,7 @@ class NoteTrainerGUI:
         self.note_accuracy_var.set("0%")
         self.average_time_var.set("0.00")
         for idx in range(17):
-            self.note_info_array[idx].set(f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}(0)")
+            self.note_info_array[idx].set(f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n(0)")
             self.note_time_avg_array[idx].set("0.00")
         self.detected_note_var.set("None")
         # messagebox.showinfo("Reset Stats", "Statistics have been reset.")

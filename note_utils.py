@@ -32,7 +32,7 @@ def text_to_note_index(note):
     elif note in NOTE_NAMES_FLAT:
         note = NOTE_NAMES_FLAT.index(note)
     else: 
-        note = "Text To Note Error"
+        note = -1
 
     return note
 
