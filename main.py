@@ -14,15 +14,17 @@ from stats_tracker import StatsTracker
 from device_config import DeviceConfig
 from note_queue import NoteQueue
 
-
 def main():
-    # Create a temporary root window for the device selection dialog
-    temp_root = tk.Tk()
-    temp_root.withdraw()  # Hide the temporary root window
+    try: 
+        # Create a temporary root window for the device selection dialog
+        temp_root = tk.Tk()
+        temp_root.withdraw()  # Hide the temporary root window
 
-    # Device selection dialog
-    device_config = DeviceConfig(temp_root, title="Select Input Device")
-    temp_root.destroy()  # Destroy the temporary root window after the dialog is done
+        # Device selection dialog
+        device_config = DeviceConfig(temp_root, title="Select Input Device")
+        temp_root.destroy()  # Destroy the temporary root window after the dialog is done
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt received during device setup. Exiting...")
 
     if device_config.device_id is None or device_config.total_input_channels is None:
         messagebox.showerror("Error", "Device selection failed or was canceled. Exiting.")

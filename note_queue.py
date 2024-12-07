@@ -57,12 +57,9 @@ class NoteQueue:
         raise ValueError("Unable to generate a valid note bag with the given constraints.")
 
     def get_notes_from_bag(self):
-        print(f"{(len(self.notes_bag))} Notes in Bag")
         if len(self.notes_bag) == 1:
             last_notes = self.notes_bag.pop(0)
             self.notes_bag = self.generate_notes_bag(last_notes['root'])
-            
-            print(f"last note is {last_notes}")
 
             return last_notes
         return self.notes_bag.pop()
@@ -97,7 +94,6 @@ class NoteQueue:
     def process_correct_note_detected(self):
         self.notes_queue.pop(0)
         new_note = self.get_notes_from_bag()
-        print(f"Aquired new note of {new_note}")
         self.notes_queue.append(new_note)
     
     def reset_queue(self):

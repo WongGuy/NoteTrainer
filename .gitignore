@@ -1,3 +1,4 @@
 *.pyc
 env/
 *.lnk
+build_env/
