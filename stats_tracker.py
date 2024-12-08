@@ -44,41 +44,41 @@ class StatsTracker:
         output.append("Note\tAvg Time")
         for note in NOTE_NAMES_SHARP_AND_FLAT:
             # plays = self.get_note_plays(note)
-            avg_time = self.get_average_time_for_note(note)
-            output.append(f"{note}\t{avg_time:.2f}")
+            avg_time = self.get_average_time_for_note_string(note)
+            output.append(f"{note}\t{avg_time}")
         output.append(f"Total Correct Notes:\t{self.correct_note_count}")
         output.append(f"Total Incorrect Notes:\t{self.incorrect_note_count}")
         total_attempts = self.correct_note_count + self.incorrect_note_count
         accuracy = 100.0 * self.correct_note_count / total_attempts if total_attempts > 0 else 0
         output.append(f"Accuracy:\t{accuracy:.0f}%")
-        avg_time_between_notes = self.get_average_time_between_notes()
-        output.append(f"Average Time Between Notes:\t{avg_time_between_notes:.2f}")
+        avg_time_between_notes = self.get_average_time_between_notes_string()
+        output.append(f"Average Time Between Notes:\t{avg_time_between_notes}")
         return "\n".join(output)
     
     def get_quick_stats_for_clipboard(self):
         output = []
         for note in NOTE_NAMES_SHARP_AND_FLAT:
-            avg_time = self.get_average_time_for_note(note)
-            output.append(f"{avg_time:.2f}")
+            avg_time = self.get_average_time_for_note_string(note)
+            output.append(f"{avg_time}")
         output.append(f"{self.correct_note_count}")
         output.append(f"{self.incorrect_note_count}")
         total_attempts = self.correct_note_count + self.incorrect_note_count
         accuracy = 100.0 * self.correct_note_count / total_attempts if total_attempts > 0 else 0
         output.append(f"{accuracy:.0f}%")
-        avg_time_between_notes = self.get_average_time_between_notes()
-        output.append(f"{avg_time_between_notes:.2f}")
+        avg_time_between_notes = self.get_average_time_between_notes_string()
+        output.append(f"{avg_time_between_notes}")
         return "\n".join(output)
 
-    def get_average_time_between_notes(self):
+    def get_average_time_between_notes_string(self):
         if self.note_intervals_count == 0:
-            return 0
-        return self.total_time_between_notes / self.note_intervals_count
+            return "-"
+        return f"{(self.total_time_between_notes / self.note_intervals_count):.2f}"
     
-    def get_average_time_for_note(self, note):
+    def get_average_time_for_note_string(self, note):
         data = self.note_times[note]
         if data['count'] < 1:
-            return 0
-        return data['total_time'] / data['count']
+            return '-'
+        return f"{(data['total_time'] / data['count']):.2f}"
     
     def get_note_plays(self, note):
         data = self.note_times[note]

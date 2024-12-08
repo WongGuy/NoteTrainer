@@ -23,11 +23,11 @@ class NoteTrainerGUI:
         self.note_enabled_var = [tk.BooleanVar(value=True) for note in NOTE_NAMES_SHARP_AND_FLAT]
         self.correct_note_count_var = tk.StringVar(value="0")
         self.incorrect_note_count_var = tk.StringVar(value="0")
-        self.note_accuracy_var = tk.StringVar(value="0%")
-        self.average_time_var = tk.StringVar(value="0.0")
+        self.note_accuracy_var = tk.StringVar(value="-%")
+        self.average_time_var = tk.StringVar(value="-")
 
         self.note_info_array = [tk.StringVar(value=f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n(0)") for idx in range(17)]
-        self.note_time_avg_array = [tk.StringVar(value="0.00") for _ in range(17)]
+        self.note_time_avg_array = [tk.StringVar(value="-") for _ in range(17)]
 
         self._setup_gui()
 
@@ -193,13 +193,13 @@ class NoteTrainerGUI:
         accuracy = 100.0*stats_tracker.correct_note_count/(stats_tracker.correct_note_count + stats_tracker.incorrect_note_count)
         self.note_accuracy_var.set(f"{accuracy:.0f}%")
         # Update average time between notes
-        average_time = stats_tracker.get_average_time_between_notes()
-        self.average_time_var.set(f"{average_time:.2f}")
+        average_time = stats_tracker.get_average_time_between_notes_string()
+        self.average_time_var.set(f"{average_time}")
         # Update average time for each individual note
         for idx, note in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
-            avg_time = stats_tracker.get_average_time_for_note(note)
+            avg_time = stats_tracker.get_average_time_for_note_string(note)
             note_plays = stats_tracker.get_note_plays(note)
-            self.note_time_avg_array[idx].set(f"{avg_time:.2f}")
+            self.note_time_avg_array[idx].set(f"{avg_time}")
             self.note_info_array[idx].set(f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n({note_plays})")
 
     def reset_queue(self):
@@ -213,11 +213,11 @@ class NoteTrainerGUI:
         # Reset GUI variables
         self.correct_note_count_var.set("0")
         self.incorrect_note_count_var.set("0")
-        self.note_accuracy_var.set("0%")
-        self.average_time_var.set("0.00")
+        self.note_accuracy_var.set("-%")
+        self.average_time_var.set("-")
         for idx in range(17):
             self.note_info_array[idx].set(f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n(0)")
-            self.note_time_avg_array[idx].set("0.00")
+            self.note_time_avg_array[idx].set("-")
         self.detected_note_var.set("None")
         # messagebox.showinfo("Reset Stats", "Statistics have been reset.")
 
