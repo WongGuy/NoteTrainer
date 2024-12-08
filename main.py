@@ -37,8 +37,8 @@ def main():
     root = tk.Tk()
     root.title("Note Trainer")
 
-    note_queue = NoteQueue(QUEUE_SIZE)
     stats_tracker = StatsTracker()
+    note_queue = NoteQueue(QUEUE_SIZE, stats_tracker)
     gui_queue = Queue()
 
     note_detector = GUINoteDetector(
@@ -82,9 +82,7 @@ def main():
                     detected_note = message['note']
                     gui.update_detected_note(detected_note)
                     # Check if detected note matches target note
-                    if text_to_note_index(detected_note) == text_to_note_index(note_queue.get_target_note()):
-                        # Update stats tracker
-                        stats_tracker.increment_correct_notes(note_queue.get_target_note())
+                    if text_to_note_index(detected_note) == note_queue.get_target_note_idx():
                         # Update the note queue
                         note_queue.process_correct_note_detected()
                         # Update the GUI

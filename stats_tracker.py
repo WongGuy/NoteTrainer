@@ -49,8 +49,8 @@ class StatsTracker:
         output.append(f"Total Correct Notes:\t{self.correct_note_count}")
         output.append(f"Total Incorrect Notes:\t{self.incorrect_note_count}")
         total_attempts = self.correct_note_count + self.incorrect_note_count
-        accuracy = 100.0 * self.correct_note_count / total_attempts if total_attempts > 0 else 0
-        output.append(f"Accuracy:\t{accuracy:.0f}%")
+        accuracy = self.get_accuracy_string()
+        output.append(f"Accuracy:\t{accuracy}%")
         avg_time_between_notes = self.get_average_time_between_notes_string()
         output.append(f"Average Time Between Notes:\t{avg_time_between_notes}")
         return "\n".join(output)
@@ -63,11 +63,16 @@ class StatsTracker:
         output.append(f"{self.correct_note_count}")
         output.append(f"{self.incorrect_note_count}")
         total_attempts = self.correct_note_count + self.incorrect_note_count
-        accuracy = 100.0 * self.correct_note_count / total_attempts if total_attempts > 0 else 0
-        output.append(f"{accuracy:.0f}%")
+        accuracy = self.get_accuracy_string()
+        output.append(f"{accuracy}%")
         avg_time_between_notes = self.get_average_time_between_notes_string()
         output.append(f"{avg_time_between_notes}")
         return "\n".join(output)
+
+    def get_accuracy_string(self):
+        if self.correct_note_count + self.incorrect_note_count == 0:
+            return '-'
+        return f"{(100.0*self.correct_note_count/(self.correct_note_count + self.incorrect_note_count)):.0f}"
 
     def get_average_time_between_notes_string(self):
         if self.note_intervals_count == 0:

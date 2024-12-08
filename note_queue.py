@@ -1,13 +1,15 @@
 # note_queue.py
 import random
 from note_utils import text_to_note_index
-from config import NOTE_NAMES_SHARP_AND_FLAT
+from config import *
 
 
 class NoteQueue:
-    def __init__(self, queue_size):
+    def __init__(self, queue_size, stats_tracker):
+        self.stats_tracker = stats_tracker
         self.enabled_roots = {note: True for note in NOTE_NAMES_SHARP_AND_FLAT}
-        self.enabled_tones = ['1']
+        self.enabled_tones = {tone: False for tone in INTERVALS.keys()}
+        self.enabled_tones['1'] = True
         self.queue_size = queue_size
         
         self.notes_bag = self.generate_notes_bag('')
@@ -15,6 +17,9 @@ class NoteQueue:
         for i in range(self.queue_size):
             self.notes_queue.append(self.get_notes_from_bag())
     
+    def generate_tones(self):
+        return self.get_enabled_tones() #TODO: Add more functionality for random tones
+
     def generate_notes_bag(self, last_root):
         enabled_roots = self.get_enabled_roots()
         if not enabled_roots:
@@ -48,7 +53,7 @@ class NoteQueue:
                 for root in shuffled_bag:
                     notes = {}
                     notes['root'] = root
-                    notes['tones'] = self.enabled_tones
+                    notes['tones'] = self.generate_tones()
                     notes_bag.append(notes)
                 
                 return notes_bag
@@ -83,18 +88,38 @@ class NoteQueue:
 
     def get_enabled_roots(self):
         return [note for note, enabled in self.enabled_roots.items() if enabled]
+    
+    def set_tone_enabled(self, tone, enabled):
+        if tone in self.enabled_tones:
+            self.enabled_tones[tone] = enabled
+        else:
+            raise ValueError(f"Note '{tone}' is not recognized.")
 
-    def get_target_note(self):
-        # TODO: support non root tones
+    def get_enabled_tones(self):
+        return [tone for tone, enabled in self.enabled_tones.items() if enabled]
+
+    def get_target_note_idx(self):
+        root_idx = text_to_note_index(self.notes_queue[0]['root'])
+        interval = self.notes_queue[0]['tones'][0]
+        offset = INTERVALS[interval]
+        idx = (root_idx + offset) % 12
+        return idx
+    
+    def get_target_root(self):
         return self.notes_queue[0]['root']
     
     def get_notes_queue(self):
         return self.notes_queue.copy()
     
     def process_correct_note_detected(self):
-        self.notes_queue.pop(0)
-        new_note = self.get_notes_from_bag()
-        self.notes_queue.append(new_note)
+        self.notes_queue[0]['tones'].pop(0)
+        if len(self.notes_queue[0]['tones']) < 1:
+            # Update stats tracker
+            self.stats_tracker.increment_correct_notes(self.get_target_root())
+            self.notes_queue.pop(0)
+            new_note = self.get_notes_from_bag()
+            self.notes_queue.append(new_note)
+        
     
     def reset_queue(self):
         self.notes_bag = self.generate_notes_bag('')
