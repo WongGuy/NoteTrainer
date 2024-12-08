@@ -33,8 +33,14 @@ class NoteTrainerGUI:
         self.note_accuracy_var = tk.StringVar(value="-%")
         self.average_time_var = tk.StringVar(value="-")
 
-        self.note_info_array = [tk.StringVar(value=f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n(0)") for idx in range(17)]
-        self.note_time_avg_array = [tk.StringVar(value="-") for _ in range(17)]
+        self.note_info_array = []
+        black_keys = [1, 2, 4, 5, 8, 9, 11, 12, 14, 15]
+        for idx, _ in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
+            if idx in black_keys:
+                self.note_info_array.append(tk.StringVar(value=f"-{NOTE_NAMES_SHARP_AND_FLAT[idx]}-\n(0)"))
+            else:
+                self.note_info_array.append(tk.StringVar(value=f"-{NOTE_NAMES_SHARP_AND_FLAT[idx]}--\n(0)"))
+        self.note_time_avg_array = [tk.StringVar(value="-") for _ in NOTE_NAMES_SHARP_AND_FLAT]
 
         self._setup_gui()
 
@@ -49,13 +55,13 @@ class NoteTrainerGUI:
         self.style.configure('WhiteKey.TLabel',
                      foreground='black',
                      background='white',
-                     font=('Helvetica', 18),
+                     font=('Courier New', 18, 'bold'),
                      anchor='center')
         
         self.style.configure('BlackKey.TLabel',
                      foreground='white',
                      background='black',
-                     font=('Helvetica', 18),
+                     font=('Courier New', 18, 'bold'),
                      anchor='center')
 
         # Set up equal row distribution
@@ -118,21 +124,21 @@ class NoteTrainerGUI:
         quick_copy_button = ttk.Button(frame, text="Copy Quick Stats", command=self.copy_quick_stats_to_clipboard)
 
         # Layout Time
-        ttk.Label(frame, text="Notes To Generate", font=('Helvetica', 18)).grid(column=0, row=0, columnspan=6, padx=5, pady=5)
-        ttk.Label(frame, text="Chord Tones to Target", font=('Helvetica', 18)).grid(column=18, row=0, columnspan=6, padx=5, pady=5)
+        ttk.Label(frame, text="Notes To Generate", font=('Helvetica', 18)).grid(column=0, row=0, columnspan=12, padx=5, pady=5)
+        ttk.Label(frame, text="Chord Tones to Target", font=('Helvetica', 18)).grid(column=12, row=0, columnspan=12, padx=5, pady=5)
         checkbox_row = 0
         for idx, note in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
             if text_is_natural(note):
-                root_checkboxes[idx].grid(column=2*(checkbox_row//4), row=1+checkbox_row%4, columnspan = 2, padx=10, pady=0, sticky='ew')
+                root_checkboxes[idx].grid(column=4*(checkbox_row//4), row=1+checkbox_row%4, columnspan = 2, padx=10, pady=0, sticky='w')
                 checkbox_row += 1
             elif text_is_sharp(note):
-                root_checkboxes[idx].grid(column=2*(checkbox_row//4), row=1+checkbox_row%4, columnspan = 2, padx=10, pady=0, sticky='w')
+                root_checkboxes[idx].grid(column=4*(checkbox_row//4), row=1+checkbox_row%4, columnspan = 2, padx=10, pady=0, sticky='w')
             else:
-                root_checkboxes[idx].grid(column=2*(checkbox_row//4), row=1+checkbox_row%4, columnspan = 2, padx=0, pady=0, sticky='e')
+                root_checkboxes[idx].grid(column=4*(checkbox_row//4) + 2, row=1+checkbox_row%4, columnspan = 2, padx=0, pady=0, sticky='w')
                 checkbox_row += 1
         
         for idx, _ in enumerate(INTERVALS):
-            tone_checkboxes[idx].grid(column=18 + 1*(idx//4), row=1+idx%4, columnspan = 1, padx=0, pady=0, sticky='ew')
+            tone_checkboxes[idx].grid(column=12 + 2*(idx//4), row=1+idx%4, columnspan = 2, padx=0, pady=0, sticky='ew')
 
         detected_note_text.grid(column=0, row=5, columnspan=6, padx=5, pady=0)
         detected_note_label.grid(column=0, row=6, columnspan=6, padx=5, pady=5)
