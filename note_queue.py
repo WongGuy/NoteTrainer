@@ -62,7 +62,7 @@ class NoteQueue:
             self.notes_bag = self.generate_notes_bag(last_notes['root'])
 
             return last_notes
-        return self.notes_bag.pop()
+        return self.notes_bag.pop(0)
 
 
     def get_valid_notes(self, last_note): 
