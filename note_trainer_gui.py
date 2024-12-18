@@ -37,9 +37,9 @@ class NoteTrainerGUI:
         black_keys = [1, 2, 4, 5, 8, 9, 11, 12, 14, 15]
         for idx, _ in enumerate(NOTE_NAMES_SHARP_AND_FLAT):
             if idx in black_keys:
-                self.note_info_array.append(tk.StringVar(value=f"-{NOTE_NAMES_SHARP_AND_FLAT[idx]}-\n(0)"))
+                self.note_info_array.append(tk.StringVar(value=f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n(0)"))
             else:
-                self.note_info_array.append(tk.StringVar(value=f"-{NOTE_NAMES_SHARP_AND_FLAT[idx]}--\n(0)"))
+                self.note_info_array.append(tk.StringVar(value=f"{NOTE_NAMES_SHARP_AND_FLAT[idx]}\n(0)"))
         self.note_time_avg_array = [tk.StringVar(value="-") for _ in NOTE_NAMES_SHARP_AND_FLAT]
 
         self._setup_gui()
